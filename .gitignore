@@ -143,3 +143,5 @@ cython_debug/
 patterns
 docs
 *.owl
+*.model
+*.ipynb

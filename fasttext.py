@@ -4,18 +4,28 @@ from gensim.models import FastText
 
 from parse_excel import ExcelParser
 from ontology import Ontology
+from norm import Normalizer
 
 
-class Corpus:
+class NamesCorpus:
     def __init__(self, dir, filename):
         self.dir = dir
-        self.filename = filename
+        self.filename = filename 
 
-    def __iter__(self, ):
+    def __iter__(self):
         parser = ExcelParser(self.dir)
         train_df = parser.read_train_set(self.filename)
         names = train_df['Полное наименование'].tolist()
         yield list(names)
+
+
+class PropsCorpus:
+    def __init__(self, dir, names):
+        self.dir = dir
+        self.names = names 
+
+    def __iter__(self):
+        yield list(self.names)
 
 
 def train_new(corpus, corpus_len):
@@ -38,23 +48,50 @@ def new_model(onto_path, path_to_excel, model_path, props_path):
     path, filename = os.path.split(path_to_excel)
     parser = ExcelParser(path)
     names, classes, names_classes = parser.read_names_and_classes(filename)
-    path, filename = os.path.split(props_path)
-    parser = ExcelParser(path)
-    props = parser.read_patterns(filename)
 
-    corpus = Corpus(path, filename)
+    corpus = NamesCorpus(path, filename)
     model = train_new(corpus, len(names))
     model.save(model_path)
 
     onto.create_many_classes(list(set(classes)))
-    onto.create_many_instances(names_classes)
+    
+    train_patterns(onto, props_path)
+
+    norm_names_classes = dict()
+    for _cls in classes:
+        normalizer = Normalizer(_cls, onto_path)
+        names = list()
+        for name, value in names_classes.items():
+            if value == _cls:
+                norm_name = normalizer.normalize_name(name)
+                norm_names_classes[norm_name] = _cls
+
+    onto.create_many_instances(norm_names_classes)
+
+def names_normalization():
+    pass
+
+def train_patterns(onto, props_path):
+    path, filename = os.path.split(props_path)
+    parser = ExcelParser(path)
+    props = parser.read_patterns(filename)
+    
+    for _cls in props:
+        names = props[_cls]['props'].split('+')
+        corpus = PropsCorpus(path, names)
+        prop_model = train_new(corpus, len(names))
+        prop_model.save(f'models/{_cls}.model')
+
+        inst_name = ' '.join(names)
+        inst = onto.create_instance(onto.get_class_by_name(_cls), inst_name) 
+        onto.set_pattern_and_props(inst, props[_cls]['pattern'], props[_cls]['props'])
 
 
 def update_model(onto_path, path_to_excel, model_path):
     path, filename = os.path.split(path_to_excel)
     parser = ExcelParser(path)
     names, classes, names_classes = parser.read_names_and_classes(filename)
-    corpus = Corpus(path, filename)
+    corpus = NamesCorpus(path, filename)
 
     model = FastText.load(model_path)
     model = train_update(model, corpus, len(names))
