@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from gensim.models import FastText
-import nltk
 
 from ontology import Ontology
 
@@ -13,10 +12,7 @@ class Normalizer():
         self.onto = Ontology(onto_path)
 
     def normalize_name(self, name):
-        print('name:')
-        print(name)
-        inst_props = nltk.word_tokenize(name, language="russian")
-        print(inst_props)
+        inst_props = name.split(' ')
 
         instans = self.onto.get_all_instances_of(self.cls_name)
 
@@ -25,7 +21,7 @@ class Normalizer():
             pattern, props = self.onto.get_pattern_and_props(inst)
             all_props_names.update(dict(zip(props.split('+'), pattern.split('+'))))
 
-        inst_props_names = defaultdict(lambda: '&None')
+        inst_props_names = dict()
         topn = 1
         for prop in inst_props:
             prop = str(prop) 
@@ -34,14 +30,9 @@ class Normalizer():
 
         props = pattern.split('+')
         props.remove('Класс')
-        print('props names:')
-        print(inst_props_names)
 
         norm_name = self.cls_name
         for prop in props:
             norm_name += ' ' + inst_props_names[prop]
-        
-        print('norm_name')
-        print(norm_name)
 
         return norm_name

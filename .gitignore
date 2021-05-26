@@ -145,3 +145,4 @@ docs
 *.owl
 *.model
 *.ipynb
+*.npy

@@ -1,6 +1,7 @@
 import os
 
 from gensim.models import FastText
+import nltk
 
 from parse_excel import ExcelParser
 from ontology import Ontology
@@ -29,7 +30,7 @@ class PropsCorpus:
 
 
 def train_new(corpus, corpus_len):
-    model = FastText(vector_size=4, window=3, min_count=1)
+    model = FastText(vector_size=10, window=5, min_count=1, min_n=4)
     model.build_vocab(corpus_iterable=corpus)
     model.train(corpus_iterable=corpus, total_examples=corpus_len, epochs=10)
     return model
@@ -57,6 +58,12 @@ def new_model(onto_path, path_to_excel, model_path, props_path):
     
     train_patterns(onto, props_path)
 
+    #norm_names_classes = names_normalization(classes, names_classes, onto_path)
+
+    onto.create_many_instances(names_classes)
+
+
+def names_normalization(classes, names_classes, onto_path):
     norm_names_classes = dict()
     for _cls in classes:
         normalizer = Normalizer(_cls, onto_path)
@@ -66,10 +73,8 @@ def new_model(onto_path, path_to_excel, model_path, props_path):
                 norm_name = normalizer.normalize_name(name)
                 norm_names_classes[norm_name] = _cls
 
-    onto.create_many_instances(norm_names_classes)
+    return norm_names_classes
 
-def names_normalization():
-    pass
 
 def train_patterns(onto, props_path):
     path, filename = os.path.split(props_path)
@@ -125,8 +130,15 @@ def define_class(onto_path, inst, model_path):
     for cl in classes_count:
         perc_count.append((cl[0], (cl[1]/topn)*100))
     
-    print('Предполагаемый класс: ', perc_count[0][0])
+    inst_class = perc_count[0][0]
+    print('Предполагаемый класс: ', inst_class)
+    print('Изменить класс? Y/N')
+    write = input().lower()
+    if write == 'y':
+        print('Введите название класса: ', end='')
+        inst_class = input()
+
     print('Записать в онтологию? Y/N')
     write = input().lower()
     if write == 'y':
-        onto.create_instance(perc_count[0][0], inst)
+        onto.create_instance(inst_class, inst)
