@@ -1,11 +1,26 @@
 import os
 
 from gensim.models import FastText
-import nltk
+from gensim.models.callbacks import CallbackAny2Vec
 
 from parse_excel import ExcelParser
 from ontology import Ontology
 from norm import Normalizer
+
+
+class Callback(CallbackAny2Vec):
+    def __init__(self):
+        self.epoch = 0
+
+    def on_epoch_end(self, model):
+        loss = model.get_latest_training_loss()
+        if self.epoch == 0:
+            print('Loss after epoch {}: {}'.format(self.epoch, loss))
+        elif(self.epoch % 1 == 0):
+            print('Loss after epoch {}: {}'.format(
+                self.epoch, loss - self.loss_previous_step))
+        self.epoch += 1
+        self.loss_previous_step = loss
 
 
 class NamesCorpus:
@@ -30,7 +45,7 @@ class PropsCorpus:
 
 
 def train_new(corpus, corpus_len):
-    model = FastText(vector_size=10, window=5, min_count=1, min_n=4)
+    model = FastText(vector_size=32, window=3, min_count=1, min_n=4, callbacks = [Callback()])
     model.build_vocab(corpus_iterable=corpus)
     model.train(corpus_iterable=corpus, total_examples=corpus_len, epochs=10)
     return model
@@ -58,8 +73,6 @@ def new_model(onto_path, path_to_excel, model_path, props_path):
     
     train_patterns(onto, props_path)
 
-    #norm_names_classes = names_normalization(classes, names_classes, onto_path)
-
     onto.create_many_instances(names_classes)
 
 
@@ -67,7 +80,6 @@ def names_normalization(classes, names_classes, onto_path):
     norm_names_classes = dict()
     for _cls in classes:
         normalizer = Normalizer(_cls, onto_path)
-        names = list()
         for name, value in names_classes.items():
             if value == _cls:
                 norm_name = normalizer.normalize_name(name)
@@ -83,13 +95,12 @@ def train_patterns(onto, props_path):
     
     for _cls in props:
         names = props[_cls]['props'].split('+')
-        corpus = PropsCorpus(path, names)
-        prop_model = train_new(corpus, len(names))
-        prop_model.save(f'models/{_cls}.model')
 
         inst_name = ' '.join(names)
-        inst = onto.create_instance(onto.get_class_by_name(_cls), inst_name) 
-        onto.set_pattern_and_props(inst, props[_cls]['pattern'], props[_cls]['props'])
+        cls_name = onto.get_class_by_name(_cls)
+        if cls_name is not None:
+            inst = onto.create_instance(onto.get_class_by_name(_cls), inst_name) 
+            onto.set_pattern_and_props(inst, props[_cls]['pattern'], props[_cls]['props'])
 
 
 def update_model(onto_path, path_to_excel, model_path):
@@ -125,7 +136,7 @@ def define_class(onto_path, inst, model_path):
         classes_count.append((cl, sim_classes.count(cl)))
 
     classes_count = sorted(classes_count, key=lambda x: x[1], reverse=True)
-
+    print(classes_count)
     perc_count = []
     for cl in classes_count:
         perc_count.append((cl[0], (cl[1]/topn)*100))

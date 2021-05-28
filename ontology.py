@@ -36,6 +36,7 @@ class Ontology():
         return self.onto.get_instances_of(self.get_class_by_name(_cls))
 
     def get_class_by_name(self, name):
+        name = name.replace(' ', '_')
         return eval(f'self.onto.{name}')
 
     def get_inst_by_name(self, inst_name):
@@ -59,6 +60,7 @@ class Ontology():
         return None
 
     def create_class(self, name, superclass=None):
+        name = name.replace(' ', '_')
         with self.onto:
             if superclass is not None:
                 new_class = type(name, (superclass,), {})
@@ -77,6 +79,7 @@ class Ontology():
     def create_many_classes(self, names: list, superclass=None):
         with self.onto:
             for name in names:
+                name = name.replace(' ', '_')
                 if superclass is not None:
                     new_class = type(name.strip(), (superclass,), {})
                 else:
