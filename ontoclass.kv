@@ -1,5 +1,6 @@
 #:kivy 2.0.0
 #:import hex kivy.utils.get_color_from_hex
+#:import new_model_view modal_views.NewModelView
 
 <FloatLayout>:
     canvas.before:
@@ -14,3 +15,7 @@
     halign: 'center'
     valign: 'center'
 
+<Label>:
+    text_size: self.width - dp(10), self.height - dp(10)
+    halign: 'center'
+    valign: 'center'

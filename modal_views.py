@@ -4,6 +4,7 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from plyer import filechooser
+from kivy.uix.popup import Popup
 
 from fasttext import new_model
 
@@ -76,12 +77,23 @@ class NewModelView(FloatLayout, ModalView):
             self.model_path.text = model_path[0]
 
     def train_new_model(self, widget):
-        view = TrainingProgress(auto_dismiss=False)
-        view.open()
-
+        if self.onto_path.text and self.train_set_path.text and \
+            self.model_path.text and self.patterns_path.text:
+                self.start_train()
+        else:
+            popup = Popup(title='',
+                content=Label(text='Заполните все поля!', font_size=25),
+                size_hint=(None, None), size=(300, 250))
+            popup.open()
+            
+    def start_train(self):
         new_model(self.onto_path.text, self.train_set_path.text,
                     self.model_path.text, self.patterns_path.text)
 
+        popup = Popup(title='',
+            content=Label(text='Обучение прошло успешно!', font_size=25),
+            size_hint=(None, None), size=(300, 250))
+        popup.open()
 
 class UpdateModelView():
     pass
@@ -95,7 +107,9 @@ class TrainingProgress(FloatLayout, ModalView):
     def __init__(self, **kwargs):
         super(TrainingProgress, self).__init__(**kwargs)
         self.size = (500, 300)
+        label = Label(text='Обучение прошло успешно', font_size="20px", pos=(0, 150))
+        self.add_widget(label)
 
-        close_btn = Button(text='Отмена', size_hint=(.25, .1), pos=(20, 20), background_color=to_rbga((192, 57, 43, 1)))
+        close_btn = Button(text='Назад', size_hint=(.25, .1), pos=(20, 20), background_color=to_rbga((192, 57, 43, 1)))
         self.add_widget(close_btn)
         close_btn.bind(on_press=self.dismiss)

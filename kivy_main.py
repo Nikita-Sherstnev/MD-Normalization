@@ -38,6 +38,7 @@ def open_update_model_view(instance):
     view = UpdateModelView(auto_dismiss=False)
     view.open()
 
+
 def open_classify_view(instance):
     view = ClassifyView(auto_dismiss=False)
     view.open()
