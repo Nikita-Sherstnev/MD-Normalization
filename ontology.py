@@ -44,6 +44,7 @@ class Ontology():
         for onto_class in classes:
             instans = self.get_all_instances_of(onto_class.name)
             inst_name = inst_name.replace(' ', '_')
+            inst_name = inst_name.replace('"', "'")
             for name in instans:
                 if inst_name == name.name:
                     return name
@@ -54,6 +55,7 @@ class Ontology():
             instans = self.get_all_instances_of(onto_class.name)
             instans = [inst.name for inst in instans]
             inst_name = inst_name.replace(' ', '_')
+            inst_name = inst_name.replace('"', "'")
             if inst_name in instans:
                 return onto_class
 
