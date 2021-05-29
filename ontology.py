@@ -86,7 +86,10 @@ class Ontology():
     def create_instance(self, onto_class, inst):
         inst = inst.replace(' ', '_')
         inst = inst.replace('"', "'")
-        inst = eval("self.onto." + str(onto_class).split(".")[1] + "(inst)")
+        if str(onto_class).find('.') == -1:
+            inst = eval("self.onto." + onto_class + "(inst)")
+        else:
+            inst = eval("self.onto." + str(onto_class).split(".")[1] + "(inst)")
         self.onto.save(file=self.path)
         return inst
 

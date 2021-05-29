@@ -36,7 +36,3 @@ if __name__ == '__main__':
             norm.normalize_name(sys.argv[4])
         else:
             print("Error")
-
-
-
-    

@@ -1,26 +1,10 @@
 import os
 
 from gensim.models import FastText
-from gensim.models.callbacks import CallbackAny2Vec
 
 from parse_excel import ExcelParser
 from ontology import Ontology
 from norm import Normalizer
-
-
-class Callback(CallbackAny2Vec):
-    def __init__(self):
-        self.epoch = 0
-
-    def on_epoch_end(self, model):
-        loss = model.get_latest_training_loss()
-        if self.epoch == 0:
-            print('Loss after epoch {}: {}'.format(self.epoch, loss))
-        elif(self.epoch % 1 == 0):
-            print('Loss after epoch {}: {}'.format(
-                self.epoch, loss - self.loss_previous_step))
-        self.epoch += 1
-        self.loss_previous_step = loss
 
 
 class NamesCorpus:
@@ -45,7 +29,7 @@ class PropsCorpus:
 
 
 def train_new(corpus, corpus_len):
-    model = FastText(vector_size=32, window=3, min_count=1, min_n=4, callbacks = [Callback()])
+    model = FastText(vector_size=32, window=3, min_count=1, min_n=4)
     model.build_vocab(corpus_iterable=corpus)
     model.train(corpus_iterable=corpus, total_examples=corpus_len, epochs=10)
     return model
@@ -151,13 +135,3 @@ def define_class(onto_path, inst, model_path):
     print('Предполагаемый класс: ', inst_class)
 
     return perc_count
-    # print('Изменить класс? Y/N')
-    # write = input().lower()
-    # if write == 'y':
-    #     print('Введите название класса: ', end='')
-    #     inst_class = input()
-
-    # print('Записать в онтологию? Y/N')
-    # write = input().lower()
-    # if write == 'y':
-    #     onto.create_instance(inst_class, inst)

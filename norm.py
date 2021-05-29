@@ -7,8 +7,6 @@ class Normalizer():
         self.onto = Ontology(onto_path)
 
     def normalize_name(self, name):
-        inst_props = name.split(' ')
-
         instans = self.onto.get_all_instances_of(self.cls_name)
         inst = instans[0]
 

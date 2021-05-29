@@ -47,12 +47,6 @@ class ExcelParser():
             props.columns = props_headers
 
             props = props.dropna(axis=0, thresh=4)
-            # .loc[props['Наименование свойства'].notnull()]
-
-            # props['Пример заполнения'] = props[props.columns[3:6]].apply(
-            #     lambda x: ' '.join(x.dropna().astype(str)),
-            #     axis=1
-            # )
 
             names = props['Наименование свойства'].tolist()
             names = [s.strip() for s in names]

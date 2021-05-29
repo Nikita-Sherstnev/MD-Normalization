@@ -1,3 +1,4 @@
+from norm import Normalizer
 from typing import Text
 from kivy.uix.modalview import ModalView
 from kivy.uix.floatlayout import FloatLayout
@@ -9,6 +10,7 @@ from kivy.uix.popup import Popup
 import threading
 
 from fasttext import new_model, update_model, define_class
+from ontology import Ontology
 
 
 def to_rbga(rbga):
@@ -238,7 +240,7 @@ class ClassifyView(FloatLayout, ModalView):
         if self.onto_path.text and \
             self.model_path.text and self.inst.text:
             predictions = define_class(self.onto_path.text, self.inst.text, self.model_path.text)
-            view = NormalizeView(auto_dismiss=False, preds=predictions, inst=self.inst.text)
+            view = ClassifyResultView(auto_dismiss=False, preds=predictions, inst=self.inst.text, onto_path=self.onto_path.text)
             view.open()
         else:
             popup = Popup(title='',
@@ -247,21 +249,106 @@ class ClassifyView(FloatLayout, ModalView):
             popup.open()
 
 
-class NormalizeView(FloatLayout, ModalView):
-    def __init__(self, preds, inst, **kwargs):
-        super(NormalizeView, self).__init__(**kwargs)
+class ClassifyResultView(FloatLayout, ModalView):
+    def __init__(self, preds, inst, onto_path, **kwargs):
+        super(ClassifyResultView, self).__init__(**kwargs)
         self.size = (600, 400)
-        self.preds = preds
+        self.pred = preds[0]
         self.inst = inst
+        self.onto = Ontology(onto_path)
 
-        self.add_widget(Label(text='Нормализация позиции', pos=(0, 170), font_size=20))
-        self.add_widget(Label(text='Предполагаемые классы:', pos=(-180, 100), font_size=16))
-        i = 70
-        for pred in self.preds:
-            print(pred[0])
-            self.add_widget(Label(text=str(pred[0]).split('.')[1] + ": " + str(pred[1]) + "%", pos=(-180, i), font_size=16))
-            i-=20
+        self.add_widget(Label(text='Определение класса', pos=(0, 170), font_size=20))
+        self.add_widget(Label(text='Предполагаемый класс:', pos=(-160, 100), font_size=18))
+        self.add_widget(Label(text=str(self.pred[0]).split('.')[1] + ": " + str(self.pred[1]) + "%", pos=(-160, 70), font_size=18))
+
+        write_btn = Button(text='Записать позицию', size_hint=(.3, .15), pos=(300, 250), background_color=to_rbga((60, 179, 113, 1)))
+        self.add_widget(write_btn)
+        write_btn.bind(on_press=self.write_inst)
 
         close_btn = Button(text='Отмена', size_hint=(.25, .1), pos=(20, 20), background_color=to_rbga((192, 57, 43, 1)))
         self.add_widget(close_btn)
         close_btn.bind(on_press=self.dismiss)
+
+    def write_inst(self, widget):
+        self.onto.create_instance(self.pred[0], self.inst)
+        self.dismiss()
+        popup = Popup(title='',
+            content=Label(text='Успешно записано!', font_size=25),
+            size_hint=(None, None), size=(300, 250))
+        popup.open()
+
+
+class NormView(FloatLayout, ModalView):
+    CLASS = 'Бумага'
+
+    def __init__(self, **kwargs):
+        super(NormView, self).__init__(**kwargs)
+        self.size = (600, 400)
+        self.add_widget(Label(text='Нормализация позиции', pos=(0, 170), font_size=20))
+
+        load_onto_btn = Button(text='Открыть онтологию', size_hint=(.25, .14), pos=(20, 280), background_color=to_rbga((100, 57, 43, 1)))
+        load_onto_btn.bind(on_press=self.show_load_onto)
+        self.onto_path = TextInput(multiline=False, size_hint=(.6, .1), pos=(200, 290))
+
+        self.add_widget(Label(text='Введите позицию для нормализации', pos=(0, -10), font_size=15))
+        self.inst = TextInput(multiline=False, size_hint=(.7, .1), pos=(100, 130))
+
+        norm_btn = Button(text='Нормализовать', size_hint=(.25, .1), pos=(240, 20), background_color=to_rbga((60, 179, 113, 1)))
+        norm_btn.bind(on_press=self.normalize)
+
+        self.add_widget(self.onto_path)
+        self.add_widget(self.inst)
+        self.add_widget(norm_btn)
+        self.add_widget(load_onto_btn)
+
+        close_btn = Button(text='Отмена', size_hint=(.25, .1), pos=(20, 20), background_color=to_rbga((192, 57, 43, 1)))
+        self.add_widget(close_btn)
+        close_btn.bind(on_press=self.dismiss)
+
+    def show_load_onto(self, widget):
+        onto_path = filechooser.open_file(title="Выберите файл онтологии", 
+                                    filters=[("*.owl")])
+        if onto_path:
+            self.onto_path.text = onto_path[0]
+
+    def normalize(self, widget):
+        if self.onto_path.text and self.inst.text:
+            norm = Normalizer(self.CLASS, self.onto_path.text)
+            norm_name = norm.normalize_name(self.inst.text)
+
+            view = NormResultView(auto_dismiss=False, norm_name=norm_name, onto_path=self.onto_path.text, _cls=self.CLASS)
+            view.open()
+        else:
+            popup = Popup(title='',
+                content=Label(text='Заполните все поля!', font_size=25),
+                size_hint=(None, None), size=(300, 250))
+            popup.open()
+
+
+class NormResultView(FloatLayout, ModalView):
+    def __init__(self, norm_name, onto_path, _cls, **kwargs):
+        super(NormResultView, self).__init__(**kwargs)
+        self.size = (600, 400)
+        self._cls = _cls
+        self.norm_name = norm_name
+        self.onto = Ontology(onto_path)
+
+        self.add_widget(Label(text='Нормализация', pos=(0, 170), font_size=20))
+        self.add_widget(Label(text='Нормализованная позиция:', pos=(0, 100), font_size=18))
+        self.add_widget(Label(text=self.norm_name, pos=(0, 70), font_size=18))
+
+        write_btn = Button(text='Записать позицию', size_hint=(.3, .15), pos=(200, 150), background_color=to_rbga((60, 179, 113, 1)))
+        self.add_widget(write_btn)
+        write_btn.bind(on_press=self.write_inst)
+
+        close_btn = Button(text='Отмена', size_hint=(.25, .1), pos=(20, 20), background_color=to_rbga((192, 57, 43, 1)))
+        self.add_widget(close_btn)
+        close_btn.bind(on_press=self.dismiss)
+
+    def write_inst(self, widget):
+        self.onto.create_instance(self._cls, self.norm_name)
+        self.dismiss()
+        popup = Popup(title='',
+            content=Label(text='Успешно записано!', font_size=25),
+            size_hint=(None, None), size=(300, 250))
+        popup.open()

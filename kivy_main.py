@@ -1,11 +1,10 @@
 from kivy.app import App
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.core.window import Window
 
-from modal_views import NewModelView, UpdateModelView, ClassifyView
+from modal_views import NewModelView, UpdateModelView, ClassifyView, NormView
 
 
 Window.size = (600, 400)
@@ -19,15 +18,18 @@ class MainScreen(FloatLayout):
 
         self.new_model_btn = Button(text='Обучить новую модель', size_hint=(.25, .25), pos=(20, 180))
         self.update_model_btn = Button(text='Продолжить обучение модели', size_hint=(.25, .25), pos=(220, 180))
-        self.classify_btn = Button(text='Классифицировать данные', size_hint=(.25, .25), pos=(420, 180))
+        self.classify_btn = Button(text='Классифицировать позицию', size_hint=(.25, .25), pos=(420, 180))
+        self.norm_btn = Button(text='Нормализовать позицию', size_hint=(.25, .25), pos=(220, 60))
 
         self.new_model_btn.bind(on_press=open_new_model_view)
         self.update_model_btn.bind(on_press=open_update_model_view)
         self.classify_btn.bind(on_press=open_classify_view)
+        self.norm_btn.bind(on_press=open_norm_view)
 
         self.add_widget(self.new_model_btn)
         self.add_widget(self.update_model_btn)
         self.add_widget(self.classify_btn)
+        self.add_widget(self.norm_btn)
 
 
 def open_new_model_view(instance):
@@ -44,6 +46,10 @@ def open_classify_view(instance):
     view = ClassifyView(auto_dismiss=False)
     view.open()
 
+
+def open_norm_view(instance):
+    view = NormView(auto_dismiss=False)
+    view.open()
 
 
 class OntoClass(App):
