@@ -101,9 +101,11 @@ def train_patterns(onto, props_path):
         if cls_name is not None:
             inst = onto.create_instance(onto.get_class_by_name(_cls), inst_name) 
             onto.set_pattern_and_props(inst, props[_cls]['pattern'], props[_cls]['props'])
+            onto.set_prefixes_and_postfixes(inst, props[_cls]['prefixes'], props[_cls]['postfixes'])
+            onto.set_types(inst, props[_cls]['types'])
 
 
-def update_model(onto_path, path_to_excel, model_path):
+def update_model(onto_path, path_to_excel, model_path, props_path):
     path, filename = os.path.split(path_to_excel)
     parser = ExcelParser(path)
     names, classes, names_classes = parser.read_names_and_classes(filename)
@@ -114,6 +116,9 @@ def update_model(onto_path, path_to_excel, model_path):
     model.save(model_path)
 
     onto = Ontology(onto_path)
+
+    train_patterns(onto, props_path)
+
     onto.create_many_classes(list(set(classes)))
     onto.create_many_instances(names_classes)
 
@@ -122,13 +127,14 @@ def define_class(onto_path, inst, model_path):
     onto = Ontology(onto_path)
     model = FastText.load(model_path)
     wv = model.wv
-    topn = 3
+    topn = 5
     most_sim = wv.most_similar(inst, topn=topn)
-
+    print(most_sim)
     sim_classes = list()
     for sim in most_sim:
         sim_classes.append(onto.get_class_of_instance(sim[0]))
 
+    sim_classes = list(filter(None, sim_classes))
     set_sim_classes = set(sim_classes)
 
     classes_count = list()
@@ -139,17 +145,19 @@ def define_class(onto_path, inst, model_path):
     print(classes_count)
     perc_count = []
     for cl in classes_count:
-        perc_count.append((cl[0], (cl[1]/topn)*100))
-    
+        perc_count.append((cl[0], int((cl[1]/len(sim_classes))*100)))
+
     inst_class = perc_count[0][0]
     print('Предполагаемый класс: ', inst_class)
-    print('Изменить класс? Y/N')
-    write = input().lower()
-    if write == 'y':
-        print('Введите название класса: ', end='')
-        inst_class = input()
 
-    print('Записать в онтологию? Y/N')
-    write = input().lower()
-    if write == 'y':
-        onto.create_instance(inst_class, inst)
+    return perc_count
+    # print('Изменить класс? Y/N')
+    # write = input().lower()
+    # if write == 'y':
+    #     print('Введите название класса: ', end='')
+    #     inst_class = input()
+
+    # print('Записать в онтологию? Y/N')
+    # write = input().lower()
+    # if write == 'y':
+    #     onto.create_instance(inst_class, inst)

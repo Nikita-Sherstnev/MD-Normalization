@@ -3,10 +3,9 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from plyer import filechooser
 from kivy.core.window import Window
 
-from modal_views import NewModelView, UpdateModelView, ClassifyView, TrainingProgress
+from modal_views import NewModelView, UpdateModelView, ClassifyView
 
 
 Window.size = (600, 400)
@@ -23,6 +22,8 @@ class MainScreen(FloatLayout):
         self.classify_btn = Button(text='Классифицировать данные', size_hint=(.25, .25), pos=(420, 180))
 
         self.new_model_btn.bind(on_press=open_new_model_view)
+        self.update_model_btn.bind(on_press=open_update_model_view)
+        self.classify_btn.bind(on_press=open_classify_view)
 
         self.add_widget(self.new_model_btn)
         self.add_widget(self.update_model_btn)

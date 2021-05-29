@@ -49,29 +49,43 @@ class ExcelParser():
             props = props.dropna(axis=0, thresh=4)
             # .loc[props['Наименование свойства'].notnull()]
 
-            props['Пример заполнения'] = props[props.columns[3:6]].apply(
-                lambda x: ' '.join(x.dropna().astype(str)),
-                axis=1
-            )
+            # props['Пример заполнения'] = props[props.columns[3:6]].apply(
+            #     lambda x: ' '.join(x.dropna().astype(str)),
+            #     axis=1
+            # )
 
             names = props['Наименование свойства'].tolist()
             names = [s.strip() for s in names]
 
             examples = props['Пример заполнения'].tolist()
-            examples = [s.strip() for s in examples]
+            examples = [str(s).strip() for s in examples]
+
+            types = props['Тип значения'].tolist()
+            types = [s.strip() for s in types]
+            types = '+'.join(types)
+
+            prefixes = props['Префикс'].tolist()
+            prefixes = [str(s).strip() for s in prefixes]
+            prefixes = '+'.join(prefixes)
+
+            postfixes = props['Постфикс'].tolist()
+            postfixes = [str(s).strip() for s in postfixes]
+            postfixes = '+'.join(postfixes)
 
             props_dict = dict(zip(names, examples))
 
             ord_props = pattern.split('+')
             ord_props.remove('Класс')
-
             example = _cls
             for prop in ord_props:
                 example += '+' + props_dict[prop]
 
             patterns_dict[_cls] = {
                 'pattern': pattern,
-                'props': example
+                'props': example,
+                'types': types,
+                'prefixes': prefixes,
+                'postfixes': postfixes
             }
             
         return patterns_dict

@@ -18,6 +18,18 @@ class Ontology():
             class props(DataProperty, FunctionalProperty): 
                 domain = [Thing]
                 range = [str]
+
+            class types(DataProperty, FunctionalProperty):
+                domain = [Thing]
+                range = [str]
+
+            class prefixes(DataProperty, FunctionalProperty):
+                domain = [Thing]
+                range = [str]
+
+            class postfixes(DataProperty, FunctionalProperty):
+                domain = [Thing]
+                range = [str]
     
     def reload(self):
         world = World()
@@ -115,6 +127,23 @@ class Ontology():
         inst.props = props
 
         self.onto.save(file=self.path)
+    
+    def set_prefixes_and_postfixes(self, inst, prefixes, postfixes):
+        inst.prefixes = prefixes
+        inst.postfixes = postfixes
+
+        self.onto.save(file=self.path)
+    
+    def set_types(self, inst, types):
+        inst.types = types
+
+        self.onto.save(file=self.path)
 
     def get_pattern_and_props(self, inst):
         return inst.pattern, inst.props
+
+    def get_prefixes_and_postfixes(self, inst):
+        return inst.prefixes, inst.postfixes
+
+    def get_types(self, inst):
+        return inst.types
