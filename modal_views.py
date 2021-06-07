@@ -213,7 +213,7 @@ class ClassifyView(FloatLayout, ModalView):
         self.onto_path = TextInput(multiline=False, size_hint=(.6, .1), pos=(200, 290))
         self.model_path = TextInput(multiline=False, size_hint=(.6, .1), pos=(200, 220))
         self.add_widget(Label(text='Введите новую позицию', pos=(0, -10), font_size=15))
-        self.inst = TextInput(multiline=False, size_hint=(.7, .1), pos=(100, 130))
+        self.inst = TextInput(multiline=False, size_hint=(.9, .1), pos=(20, 130))
 
         self.add_widget(self.inst)
         self.add_widget(self.onto_path)
@@ -291,7 +291,7 @@ class NormView(FloatLayout, ModalView):
         self.onto_path = TextInput(multiline=False, size_hint=(.6, .1), pos=(200, 290))
 
         self.add_widget(Label(text='Введите позицию для нормализации', pos=(0, -10), font_size=15))
-        self.inst = TextInput(multiline=False, size_hint=(.7, .1), pos=(100, 130))
+        self.inst = TextInput(multiline=False, size_hint=(.9, .1), pos=(20, 130))
 
         norm_btn = Button(text='Нормализовать', size_hint=(.25, .1), pos=(240, 20), background_color=to_rbga((60, 179, 113, 1)))
         norm_btn.bind(on_press=self.normalize)
